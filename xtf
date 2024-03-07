@@ -35,6 +35,10 @@ list(){
     echo $(awk -v after="$AFTER" -v before="$BEFORE" -F ';' '$2 > after && $2 < before' $FILE)
 }
 
+list-currency(){
+    
+}
+
 while getopts ":-:a:b:c:h" opt 
 do 
     case "$opt" in 
