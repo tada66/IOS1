@@ -9,6 +9,12 @@ DATE_TIME_REGEX="^([0-9]{4})-([0-9]{1,2})-([0-9]{1,2}) ([0-9]{1,2}):([0-9]{1,2})
 BEFORE=""
 AFTER=""
 CURRENCY=""
+HELP="0"
+AFTER=""
+BEFORE=""
+CURRENCY=""
+USER=""
+FILE=""
 
 help(){
     echo "xtf [-h|--help] [FILTR] [PŘÍKAZ] UŽIVATEL LOG [LOG2 [...]"
@@ -24,10 +30,11 @@ FILTR může být kombinace následujících:
 -h a --help vypíšou nápovědu s krátkým popisem každého příkazu a přepínače."
 }
 
-HELP="0"
-AFTER=""
-BEFORE=""
-CURRENCY=""
+list(){
+    echo "$FILE"
+    echo $(awk -v after="$AFTER" -v before="$BEFORE" -F ';' '$2 > after && $2 < before' $FILE)
+}
+
 while getopts ":-:a:b:c:h" opt 
 do 
     case "$opt" in 
@@ -86,15 +93,27 @@ if [ ! -z "$CURRENCY" ] ;  then
     echo "currency: $CURRENCY"
     shift 2
 fi
+USER=$2
+FILE=$3
 case "$1" in 
     list)   
-        echo "yeag we got list"
+        list
         ;;
     list-currency)
+        list-currency
         ;;
     status)
+        status
         ;;
     profit)
+        profit
+        ;;
+    *)  
+        echo "NO command, use list, dont shift"
+        USER=$1
+        FILE=$2
+        list
         ;;
 esac
-echo $2
+#user = $1
+#file = $2
