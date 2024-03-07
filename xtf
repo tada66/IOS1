@@ -1,13 +1,16 @@
-#!/bin/sh
+#!/bin/bash
 # xhorakt00 Tadeas Horak
 # 7. 3. 2024
 
 export POSIXLY_CORRECT=yes
 export LC_ALL=C
 
+DATE_TIME_REGEX="^([0-9]{4})-([0-9]{1,2})-([0-9]{1,2}) ([0-9]{1,2}):([0-9]{1,2}):([0-9]{1,2})$"
+
 help(){
     echo "xtf [-h|--help] [FILTR] [PŘÍKAZ] UŽIVATEL LOG [LOG2 [...]"
 }
+HELP="0"
 while getopts ":-:a:b:c:h" opt 
 do 
     case "$opt" in 
@@ -22,8 +25,24 @@ do
                     ;;
                 *)
                     echo "Invalid syntax" >&2
+                    exit 1
             esac
             ;;
+        a)
+            if [[ ! "$OPTARG" =~ $DATE_TIME_REGEX ]] ; then
+                echo "Incorrect date or time format!" >&2
+                exit 1
+            fi
+            ;;
+
+        b)
+            if [[ ! "$OPTARG" =~ $DATE_TIME_REGEX ]] ; then
+                echo "Incorrect date or time format!" >&2
+                exit 1
+            fi
+            ;;
+
+        c) ;;
         *)
             echo "Invalid* syntax" >&2
             exit 1
