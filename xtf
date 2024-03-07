@@ -6,11 +6,28 @@ export POSIXLY_CORRECT=yes
 export LC_ALL=C
 
 DATE_TIME_REGEX="^([0-9]{4})-([0-9]{1,2})-([0-9]{1,2}) ([0-9]{1,2}):([0-9]{1,2}):([0-9]{1,2})$"
+BEFORE=""
+AFTER=""
+CURRENCY=""
 
 help(){
     echo "xtf [-h|--help] [FILTR] [PŘÍKAZ] UŽIVATEL LOG [LOG2 [...]"
+    echo "PŘÍKAZ může být jeden z:
+list – výpis záznamů pro daného uživatele.
+list-currency – výpis seřazeného seznamu vyskytujících se měn.
+status – výpis skutečného stavu účtu seskupeného a seřazeného dle jednotlivých měn.
+profit – výpis stavu účtu zákazníka se započítaným fiktivním výnosem.
+FILTR může být kombinace následujících:
+-a DATETIME – after: jsou uvažovány pouze záznamy PO tomto datu a čase (bez něj). DATETIME je formátu YYYY-MM-DD HH:MM:SS.
+-b DATETIME – before: jsou uvažovány pouze záznamy PŘED tímto datem a časem (bez něj).
+-c CURRENCY – jsou uvažovány pouze záznamy odpovídající dané měně.
+-h a --help vypíšou nápovědu s krátkým popisem každého příkazu a přepínače."
 }
+
 HELP="0"
+AFTER=""
+BEFORE=""
+CURRENCY=""
 while getopts ":-:a:b:c:h" opt 
 do 
     case "$opt" in 
@@ -18,7 +35,7 @@ do
             HELP="1"
             ;;
         -)  
-            case $OPTARG in
+            case $OPTARG in 
                 help)
                     help
                     exit 0
@@ -33,6 +50,7 @@ do
                 echo "Incorrect date or time format!" >&2
                 exit 1
             fi
+            AFTER=$OPTARG
             ;;
 
         b)
@@ -40,9 +58,12 @@ do
                 echo "Incorrect date or time format!" >&2
                 exit 1
             fi
+            BEFORE=$OPTARG
             ;;
 
-        c) ;;
+        c) CURRENCY=$OPTARG
+           ;;
+
         *)
             echo "Invalid* syntax" >&2
             exit 1
@@ -51,4 +72,29 @@ do
 done
 if [ "$HELP" -eq "1" ] ; then
     help
+    exit 0
 fi
+if [ ! -z "$AFTER" ] ; then
+    echo "after: $AFTER"
+    shift 2
+fi
+if [ ! -z "$BEFORE" ] ; then
+    echo "before: $BEFORE"
+    shift 2
+fi
+if [ ! -z "$CURRENCY" ] ;  then
+    echo "currency: $CURRENCY"
+    shift 2
+fi
+case "$1" in 
+    list)   
+        echo "yeag we got list"
+        ;;
+    list-currency)
+        ;;
+    status)
+        ;;
+    profit)
+        ;;
+esac
+echo $2
