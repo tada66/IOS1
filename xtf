@@ -6,10 +6,9 @@ export POSIXLY_CORRECT=yes
 export LC_ALL=C
 
 DATE_TIME_REGEX="^([0-9]{4})-([0-9]{1,2})-([0-9]{1,2}) ([0-9]{1,2}):([0-9]{1,2}):([0-9]{1,2})$"
-BEFORE=""
-AFTER=""
-CURRENCY=""
-HELP="0"
+
+HELP="0" #dont like this :( but it doesn't work without it :((
+
 AFTER=""
 BEFORE=""
 CURRENCY=""
@@ -31,23 +30,37 @@ FILTR může být kombinace následujících:
 }
 
 list(){
-    echo "$FILE"
-    echo $(awk -v after="$AFTER" -v before="$BEFORE" -F ';' '$2 > after && $2 < before' $FILE)
+    AWKARG=""
+    if [[ ! -z $AFTER ]] ; then
+        AWKARG="\$2 > after"
+    fi
+    if [[ ! -z $BEFORE ]] ; then
+        if [[ ! -z $AWKARG ]] ; then
+            AWKARG+=" && \$2 < before"
+        else
+            AWKARG="\$2 < before"
+        fi
+    fi
+    if [[ ! -z $CURRENCY ]] ; then
+        if [[ ! -z $AWKARG ]] ; then
+            AWKARG+=" && \$3 == currency"
+        else
+            AWKARG="\$3 == currency"
+        fi
+    fi
+    echo "$(awk -v after="$AFTER" -v before="$BEFORE" -v currency="$CURRENCY" -F ';' "$AWKARG" $FILE)"
 }
 
-list-currency(){
-    
-}
 
-while getopts ":-:a:b:c:h" opt 
+while getopts ":-:a:b:c:h" opt #a+arg, b+arg, c+arg, h (no arg), -+arg (used for --help)
 do 
     case "$opt" in 
         h)
-            HELP="1"
+            HELP="1"    #tried to do this with OPTIND != 2, but it just refuses to work, idk just kill me
             ;;
         -)  
             case $OPTARG in 
-                help)
+                help)       #only accepting --help
                     help
                     exit 0
                     ;;
