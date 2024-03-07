@@ -1,0 +1,30 @@
+#!/bin/sh
+# xhorakt00 Tadeas Horak
+# 7. 3. 2024
+
+export POSIXLY_CORRECT=yes
+export LC_ALL=C
+
+help(){
+    echo "xtf [-h|--help] [FILTR] [PŘÍKAZ] UŽIVATEL LOG [LOG2 [...]"
+    echo "PŘÍKAZY"
+    echo "list - list – výpis záznamů pro daného uživatele"
+    echo "list-currency – výpis seřazeného seznamu vyskytujících se měn."
+    echo "status – výpis skutečného stavu účtu seskupeného a seřazeného dle jednotlivých měn."
+    echo "profit – výpis stavu účtu zákazníka se započítaným fiktivním výnosem."
+    echo "FILTRY"
+    echo "-a DATETIME – after: jsou uvažovány pouze záznamy PO tomto datu a čase (bez něj). DATETIME je formátu YYYY-MM-DD HH:MM:SS."
+    echo "-b DATETIME – before: jsou uvažovány pouze záznamy PŘED tímto datem a časem (bez něj)."
+    echo "-c CURRENCY – jsou uvažovány pouze záznamy odpovídající dané měně."
+    exit 0
+}
+
+while getopts ":ha:b:c:" opt 
+do case "$opt" in 
+    h)
+        help
+        ;;
+    a)
+        echo "huaaaaa"
+    esac
+done
