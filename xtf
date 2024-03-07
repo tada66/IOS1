@@ -5,7 +5,7 @@
 export POSIXLY_CORRECT=yes
 export LC_ALL=C
 
-DATE_TIME_REGEX="^([0-9]{4})-([0-9]{1,2})-([0-9]{1,2}) ([0-9]{1,2}):([0-9]{1,2}):([0-9]{1,2})$"
+DATE_TIME_REGEX="^([0-9]{4})-([0-9]{1,2})-([0-9]{1,2}) ([0-9]{1,2}):([0-9]{1,2}):([0-9]{1,2})$"     #will check if the date and time is in the correct format (YYYY-MM-DD HH:MM:SS)
 
 HELP="0" #dont like this :( but it doesn't work without it :((
 
@@ -30,25 +30,17 @@ FILTR může být kombinace následujících:
 }
 
 list(){
-    AWKARG=""
-    if [[ ! -z $AFTER ]] ; then
-        AWKARG="\$2 > after"
+    AWKARG="\$1 == user"    #variable to store the eventual argument for awk
+    if [[ -n $AFTER ]]; then
+        AWKARG+=" && \$2 > after"
     fi
-    if [[ ! -z $BEFORE ]] ; then
-        if [[ ! -z $AWKARG ]] ; then
-            AWKARG+=" && \$2 < before"
-        else
-            AWKARG="\$2 < before"
-        fi
+    if [[ -n $BEFORE ]]; then
+        AWKARG+=" && \$2 < before"
     fi
-    if [[ ! -z $CURRENCY ]] ; then
-        if [[ ! -z $AWKARG ]] ; then
-            AWKARG+=" && \$3 == currency"
-        else
-            AWKARG="\$3 == currency"
-        fi
+    if [[ -n $CURRENCY ]]; then
+        AWKARG+=" && \$3 == currency"
     fi
-    echo "$(awk -v after="$AFTER" -v before="$BEFORE" -v currency="$CURRENCY" -F ';' "$AWKARG" $FILE)"
+    awk -v user="$USER" -v after="$AFTER" -v before="$BEFORE" -v currency="$CURRENCY" -F ';' "$AWKARG" "$FILE"
 }
 
 
@@ -89,7 +81,7 @@ do
            ;;
 
         *)
-            echo "Invalid* syntax" >&2
+            echo "Invalid syntax" >&2
             exit 1
             ;;
     esac
@@ -98,15 +90,15 @@ if [ "$HELP" -eq "1" ] ; then
     help
     exit 0
 fi
-if [ ! -z "$AFTER" ] ; then
+if [ -n "$AFTER" ] ; then
     echo "after: $AFTER"
     shift 2
 fi
-if [ ! -z "$BEFORE" ] ; then
+if [ -n "$BEFORE" ] ; then
     echo "before: $BEFORE"
     shift 2
 fi
-if [ ! -z "$CURRENCY" ] ;  then
+if [ -n "$CURRENCY" ] ;  then
     echo "currency: $CURRENCY"
     shift 2
 fi
@@ -132,5 +124,5 @@ case "$1" in
         list
         ;;
 esac
-#user = $1
-#file = $2
+
+exit 0
