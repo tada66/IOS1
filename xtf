@@ -91,15 +91,12 @@ if [ "$HELP" -eq "1" ] ; then
     exit 0
 fi
 if [ -n "$AFTER" ] ; then
-    echo "after: $AFTER"
     shift 2
 fi
 if [ -n "$BEFORE" ] ; then
-    echo "before: $BEFORE"
     shift 2
 fi
 if [ -n "$CURRENCY" ] ;  then
-    echo "currency: $CURRENCY"
     shift 2
 fi
 USER=$2
