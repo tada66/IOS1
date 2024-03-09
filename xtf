@@ -12,6 +12,8 @@ AFTER=""
 BEFORE=""
 CURRENCY=""
 filterOUT=""
+SortedCurrArr=()
+SortedCurrAmountArr=()
 
 help(){
     echo "xtf [-h|--help] [FILTR] [PŘÍKAZ] UŽIVATEL LOG [LOG2 [...]"
@@ -44,10 +46,10 @@ filter(){
     filterOUT=$(awk -v user="$USER" -v after="$AFTER" -v before="$BEFORE" -v currency="$CURRENCY" -F ';' "$AWKARG" "$FILE")   #according to the interwebz there's no way to return a string, much less an array, and that this is just how it's done in shell, not sure if i like this
 }
 
-listCurrency(){
+getCurrency(){
     filter "$1" "$2"  #call filter to get filterOUT based on arguments
     UnsortedMultiCurr=$(echo "$filterOUT" | awk -F';' '{print $3}')    #save all the currencies left after filtering
-    readarray -t UnsortedMultiCurrArr <<<"$UnsortedMultiCurr"    #split results from awk by new line into elements in an array
+    readarray -t UnsortedMultiCurrArr <<<"$UnsortedMultiCurr"    #split results from awk by new line into elements in an array $UnsortedMultiCurrArr
     UnsortedCurrArr=() #Array without possible duplicates
     i=0
     for elementM in "${UnsortedMultiCurrArr[@]}"
@@ -61,13 +63,34 @@ listCurrency(){
         done
         if [[ "$found" == "0" ]] ; then
             UnsortedCurrArr[$i]="$elementM"
-            i+=1
+            i=$((i+1))
         fi
     done
-    SortedArr=$(printf "%s\n" "${UnsortedCurrArr[@]}" | sort)   #results sorted by sort utility, it needs to be fed with values separated by new lines, hence the use of printf instead of echo
-    if [[ -n "${SortedArr[*]}" ]] ; then
-        echo "${SortedArr[@]}"              #dont print if no results were found, would result in an empty line
-    fi
+    SortedCurr=$(printf "%s\n" "${UnsortedCurrArr[@]}" | sort)   #results sorted by sort utility, it needs to be fed with values separated by new lines, hence the use of printf instead of echo
+    readarray -t SortedCurrArr <<<"$SortedCurr"
+}
+
+status(){
+    filter "$1" "$2"  #call filter to get filterOUT based on arguments
+    getCurrency "$1" "$2"
+    CurrNames=$(echo "$filterOUT" | awk -F';' '{print $3}')    #save all the currency names left after filtering
+    readarray -t CurrNameArr <<<"$CurrNames"    #split results from awk by new line into elements in an array CurrNameArr
+    CurrAmounts=$(echo "$filterOUT" | awk -F';' '{print $4}')
+    readarray -t CurrAmountArr <<<"$CurrAmounts"
+    j=0
+    for CurrName in "${CurrNameArr[@]}"
+    do
+        i=0
+        for SortedCurrName in "${SortedCurrArr[@]}"
+        do
+            if [[ "$SortedCurrName" == "$CurrName" ]] ; then
+                SortedCurrAmountArr[$i]=$(awk "BEGIN { printf \"%.4f\", ${SortedCurrAmountArr[$i]} + ${CurrAmountArr[$j]}; }")     #this would be better with bc but i dont have that in my shell
+            else 
+                i=$((i+1))
+            fi
+        done
+        j=$((j+1))
+    done
 }
 
 while getopts ":-:a:b:c:h" opt #a+arg, b+arg, c+arg, h (no arg), -+arg (used for --help)
@@ -130,10 +153,19 @@ case "$1" in
         echo "$filterOUT"
         ;;
     list-currency)
-        listCurrency "$2" "$3"
+        getCurrency "$2" "$3"
+        if [[ -n "{$SortedCurr[*]}" ]] ; then
+            echo "${SortedCurr[@]}"              #dont print if no results were found, would result in an empty line
+        fi
         ;;
     status)
-        status
+        status "$2" "$3"
+        i=0
+        for SortedCurrName in "${SortedCurrArr[@]}"
+        do 
+            echo "$SortedCurrName : ${SortedCurrAmountArr[$i]}"
+            i=$((i+1))
+        done
         ;;
     profit)
         profit
