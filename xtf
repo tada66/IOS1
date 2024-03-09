@@ -11,7 +11,7 @@ HELP="0" #dont like this :( but it doesn't work without it :((
 AFTER=""
 BEFORE=""
 CURRENCY=""
-ListOUT=""
+filterOUT=""
 
 help(){
     echo "xtf [-h|--help] [FILTR] [PŘÍKAZ] UŽIVATEL LOG [LOG2 [...]"
@@ -28,7 +28,7 @@ FILTR může být kombinace následujících:
 exit 0
 }
 
-list(){
+filter(){
     USER=$1
     FILE=$2     #get the user and file from arguments passed to the function
     AWKARG="\$1 == user"    #variable to store the eventual argument for awk
@@ -41,11 +41,12 @@ list(){
     if [[ -n $CURRENCY ]]; then
         AWKARG+=" && \$3 == currency"
     fi
-    ListOUT=$(awk -v user="$USER" -v after="$AFTER" -v before="$BEFORE" -v currency="$CURRENCY" -F ';' "$AWKARG" "$FILE")   #according to the interwebz there's no way to return a string, much less an array, and that this is just how it's done in shell, not sure if i like this
+    filterOUT=$(awk -v user="$USER" -v after="$AFTER" -v before="$BEFORE" -v currency="$CURRENCY" -F ';' "$AWKARG" "$FILE")   #according to the interwebz there's no way to return a string, much less an array, and that this is just how it's done in shell, not sure if i like this
 }
 
 listCurrency(){
-    UnsortedMultiCurr=$(echo "$ListOUT" | awk -F';' '{print $3}')    #save all the currencies left after filtering
+    filter "$1" "$2"  #call filter to get filterOUT based on arguments
+    UnsortedMultiCurr=$(echo "$filterOUT" | awk -F';' '{print $3}')    #save all the currencies left after filtering
     readarray -t UnsortedMultiCurrArr <<<"$UnsortedMultiCurr"    #split results from awk by new line into elements in an array
     UnsortedCurrArr=() #Array without possible duplicates
     i=0
@@ -125,12 +126,11 @@ fi
 
 case "$1" in 
     list)   
-        list "$2" "$3"
-        echo "$ListOUT"
+        filter "$2" "$3"
+        echo "$filterOUT"
         ;;
     list-currency)
-        list "$2" "$3"
-        listCurrency
+        listCurrency "$2" "$3"
         ;;
     status)
         status
@@ -139,8 +139,8 @@ case "$1" in
         profit
         ;;
     *)  
-        list "$1" "$2"
-        echo "$ListOUT"
+        filter "$1" "$2"
+        echo "$filterOUT"
         ;;
 esac
 exit 0
