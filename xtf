@@ -11,9 +11,9 @@ AFTER=""
 BEFORE=""
 CURRENCY=""
 filterOUT=""
-#files=()
 SortedCurrArr=()
 SortedCurrAmountArr=()
+files=()
 
 help(){
     echo "Použití: xtf [-h|--help] [FILTR] [PŘÍKAZ] UŽIVATEL LOG [LOG2 [...]
@@ -35,10 +35,11 @@ fileCheck(){
     if [[ ! -f "$1" ]] ; then
         return 1
     fi
-    readarray -t TradersArr <<<"$(awk -F';' '{print $1}' "$1")"
-    readarray -t DateTimesArr <<<"$(awk -F';' '{print $2}' "$1")"
-    readarray -t CurrenciesArr <<<"$(awk -F';' '{print $3}' "$1")"
-    readarray -t AmountsArr <<<"$(awk -F';' '{print $4}' "$1")"
+    fileContent=$(getContent "$1")
+    readarray -t TradersArr <<<"$(echo "$fileContent" | awk -F';' '{print $1}')"
+    readarray -t DateTimesArr <<<"$(echo "$fileContent" | awk -F';' '{print $2}')"
+    readarray -t CurrenciesArr <<<"$(echo "$fileContent" | awk -F';' '{print $3}')"
+    readarray -t AmountsArr <<<"$(echo "$fileContent" | awk -F';' '{print $4}')"
     i=0
     for trader in "${TradersArr[@]}"
     do
@@ -59,9 +60,29 @@ fileCheck(){
     return "0"
 }
 
+getContent(){
+    if [[ "$1" == *.gz ]] ; then
+        fileContent="$(gunzip -c "$1")"
+    else
+        fileContent="$(cat "$1")"
+    fi
+    echo "$fileContent"
+}
+
+combinedFiles(){
+    content=""
+    for file in "${files[@]}"
+    do
+    content+="$(getContent "$file")\n"
+    done
+    content=$(echo -n "$content" | sed '$s/\\n$//')  #remove the last new line so it doesnt cause problems, sed matches the last \n and replaces with nothing
+    echo -e "$content"      #print while interpretting the \n as a newline
+}
+
 filter(){
     USER=$1
     FILE=$2     #get the user and file from arguments passed to the function
+    fileContent=$(combinedFiles)
     if [[ -z "$USER" ]] ; then
         exit 0
     fi
@@ -75,11 +96,14 @@ filter(){
     if [[ -n $CURRENCY ]]; then
         AWKARG+=" && \$3 == currency"
     fi
-    filterOUT=$(awk -v user="$USER" -v after="$AFTER" -v before="$BEFORE" -v currency="$CURRENCY" -F ';' "$AWKARG" "$FILE")   #according to the interwebz there's no way to return a string, much less an array, and that this is just how it's done in shell, not sure if i like this
+    filterOUT=$(echo "$fileContent" | awk -v user="$USER" -v after="$AFTER" -v before="$BEFORE" -v currency="$CURRENCY" -F ';' "$AWKARG")   #according to the interwebz there's no way to return a string, much less an array, and that this is just how it's done in shell, not sure if i like this
 }
 
 getCurrency(){
-    filter "$1" "$2"  #call filter to get filterOUT based on arguments
+    for file in "${files[@]}"
+    do
+    filter "$1" "$file"  #call filter to get filterOUT based on arguments
+    done
     UnsortedMultiCurr=$(echo "$filterOUT" | awk -F';' '{print $3}')    #save all the currencies left after filtering
     readarray -t UnsortedMultiCurrArr <<<"$UnsortedMultiCurr"    #split results from awk by new line into elements in an array $UnsortedMultiCurrArr
     UnsortedCurrArr=() #Array without possible duplicates
@@ -202,43 +226,43 @@ if [ -n "$CURRENCY" ] ;  then
     shift 2
 fi
 
+i=3 #starting at 3 because $1 list/list-currency/status and $2 is user !!! if no command provided file already at $2 MUST CHECK LATER !!
+eval evaled='$'$i
+while [ -n "$evaled" ] 
+do
+    files[$i-3]="$evaled"   #-3 so the array starts at zero
+    i=$((i+1))
+    eval evaled='$'$i
+done
+for file in "${files[@]}"
+do
+    if ! fileCheck "$file" ; then
+        echo "error in file">&2
+        exit 1
+    fi
+done
 case "$1" in 
-    list)   
-        if ! fileCheck "$3" ; then
-            exit 1
-        fi
-        filter "$2" "$3"
+    list)
+        filter "$2" "${files[@]}"
         if [[ -n "$filterOUT" ]] ; then
             echo "$filterOUT"
         fi
         ;;
     list-currency)
-        if ! fileCheck "$3" ; then
-            exit 1
-        fi
-        getCurrency "$2" "$3"
+        getCurrency "$2" "${files[@]}"
         if [[ -n "${SortedCurr[*]}" ]] ; then
             echo "${SortedCurr[@]}"              #dont print if no results were found, would result in an empty line
         fi
         ;;
     status)
-        if ! fileCheck "$3" ; then
-            exit 1
-        fi
-        status "$2" "$3"
+        status "$2" "${files[@]}"
         printstatus
         ;;
     profit)
-        if ! fileCheck "$3" ; then
-            exit 1
-        fi
-        profit "$2" "$3"
+        profit "$2" "${files[@]}"
         printstatus
         ;;
     *)  
-        if ! fileCheck "$2" ; then
-            exit 1
-        fi
         filter "$1" "$2"
         if [[ -n "$filterOUT" ]] ; then
             echo "$filterOUT"
