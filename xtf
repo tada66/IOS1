@@ -7,7 +7,6 @@ export LC_ALL=C
 
 DATE_TIME_REGEX="^([0-9]{4})-([0-9]{1,2})-([0-9]{1,2}) ([0-9]{1,2}):([0-9]{1,2}):([0-9]{1,2})$"     #will check if the date and time is in the correct format (YYYY-MM-DD HH:MM:SS)
 
-HELP="0" #dont like this :( but it doesn't work without it :((
 AFTER=""
 BEFORE=""
 CURRENCY=""
@@ -17,23 +16,24 @@ SortedCurrArr=()
 SortedCurrAmountArr=()
 
 help(){
-    echo "xtf [-h|--help] [FILTR] [PŘÍKAZ] UŽIVATEL LOG [LOG2 [...]"
-    echo "PŘÍKAZ může být jeden z:
-list – výpis záznamů pro daného uživatele.
-list-currency – výpis seřazeného seznamu vyskytujících se měn.
-status – výpis skutečného stavu účtu seskupeného a seřazeného dle jednotlivých měn.
-profit – výpis stavu účtu zákazníka se započítaným fiktivním výnosem.
+    echo "Použití: xtf [-h|--help] [FILTR] [PŘÍKAZ] UŽIVATEL LOG [LOG2 [...]
+
+PŘÍKAZ může být jeden z:
+    list – výpis záznamů pro daného uživatele.
+    list-currency – výpis seřazeného seznamu vyskytujících se měn.
+    status – výpis skutečného stavu účtu seskupeného a seřazeného dle jednotlivých měn.
+    profit – výpis stavu účtu zákazníka se započítaným fiktivním výnosem.
 FILTR může být kombinace následujících:
--a DATETIME – after: jsou uvažovány pouze záznamy PO tomto datu a čase (bez něj). DATETIME je formátu YYYY-MM-DD HH:MM:SS.
--b DATETIME – before: jsou uvažovány pouze záznamy PŘED tímto datem a časem (bez něj).
--c CURRENCY – jsou uvažovány pouze záznamy odpovídající dané měně.
--h a --help vypíšou nápovědu s krátkým popisem každého příkazu a přepínače."
-exit 0
+    -a DATETIME – after: jsou uvažovány pouze záznamy PO tomto datu a čase (bez něj). DATETIME je formátu YYYY-MM-DD HH:MM:SS.
+    -b DATETIME – before: jsou uvažovány pouze záznamy PŘED tímto datem a časem (bez něj).
+    -c CURRENCY – jsou uvažovány pouze záznamy odpovídající dané měně.
+    -h a --help vypíšou nápovědu s krátkým popisem každého příkazu a přepínače."
+    exit 0
 }
 
 fileCheck(){
     if [[ ! -f "$1" ]] ; then
-        exit 1
+        return 1
     fi
     readarray -t TradersArr <<<"$(awk -F';' '{print $1}' "$1")"
     readarray -t DateTimesArr <<<"$(awk -F';' '{print $2}' "$1")"
@@ -42,30 +42,29 @@ fileCheck(){
     i=0
     for trader in "${TradersArr[@]}"
     do
-        if [[ -z "$trader" ]] ; then
-            echo "Invalid log">&2
-            exit 1
+        if [[ -z "$trader" ]] ; then    #check if the first collum isn't empty
+            return 1
         fi
-        if [[ ! "${DateTimesArr[$i]}" =~ $DATE_TIME_REGEX ]] ; then
-            echo "Invalid date time format in log">&2
-            exit 1
+        if [[ ! "${DateTimesArr[$i]}" =~ $DATE_TIME_REGEX ]] ; then     #check if the date time collum has the correct format
+            return 1
         fi
-        if [[ -z "${CurrenciesArr[$i]}" ]] ; then
-            echo "Invalid log">&2
-            exit 1
+        if [[ ! "${#CurrenciesArr[$i]}" -eq 3 ]] || [[ ! "${CurrenciesArr[$i]}" =~ [A-Z]{3} ]] ; then       #Currency code must be exactly 3 Upper case letters long
+            return 1
         fi
-        if [[ -z "${AmountsArr[$i]}" ]] ; then
-            echo "Invalid log">&2
-            exit 1
+        if [[ ! "${AmountsArr[$i]}" =~ [0-9]+\.[0-9]+ ]] ; then  #check if it's a decimal number
+            return 1
         fi
-        
         i=$((i+1))
     done
+    return "0"
 }
 
 filter(){
     USER=$1
     FILE=$2     #get the user and file from arguments passed to the function
+    if [[ -z "$USER" ]] ; then
+        exit 0
+    fi
     AWKARG="\$1 == user"    #variable to store the eventual argument for awk
     if [[ -n $AFTER ]]; then
         AWKARG+=" && \$2 > after"
@@ -156,7 +155,7 @@ while getopts ":-:a:b:c:h" opt #a+arg, b+arg, c+arg, h (no arg), -+arg (used for
 do 
     case "$opt" in 
         h)
-            HELP="1"
+            help
             ;;
         -)  
             case $OPTARG in 
@@ -193,9 +192,6 @@ do
             ;;
     esac
 done
-if [ "$HELP" -eq "1" ] ; then
-    help
-fi
 if [ -n "$AFTER" ] ; then
     shift 2
 fi
@@ -208,31 +204,41 @@ fi
 
 case "$1" in 
     list)   
-        fileCheck "$3"
+        if ! fileCheck "$3" ; then
+            exit 1
+        fi
         filter "$2" "$3"
         if [[ -n "$filterOUT" ]] ; then
             echo "$filterOUT"
         fi
         ;;
     list-currency)
-        fileCheck "$3"
+        if ! fileCheck "$3" ; then
+            exit 1
+        fi
         getCurrency "$2" "$3"
         if [[ -n "${SortedCurr[*]}" ]] ; then
             echo "${SortedCurr[@]}"              #dont print if no results were found, would result in an empty line
         fi
         ;;
     status)
-        fileCheck "$3"
+        if ! fileCheck "$3" ; then
+            exit 1
+        fi
         status "$2" "$3"
         printstatus
         ;;
     profit)
-        fileCheck "$3"
+        if ! fileCheck "$3" ; then
+            exit 1
+        fi
         profit "$2" "$3"
         printstatus
         ;;
     *)  
-        fileCheck "$2"
+        if ! fileCheck "$2" ; then
+            exit 1
+        fi
         filter "$1" "$2"
         if [[ -n "$filterOUT" ]] ; then
             echo "$filterOUT"
