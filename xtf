@@ -81,7 +81,7 @@ status(){
     readarray -t CurrAmountArr <<<"$CurrAmounts"
     j=0
     if [[ -z "${CurrNameArr[*]}" ]] || [[ -z "${SortedCurrArr[*]}" ]] ; then
-        exit 1
+        exit 0
     fi
     for CurrName in "${CurrNameArr[@]}"
     do
@@ -99,9 +99,28 @@ status(){
 }
 
 profit(){
-    echo "not implemented yet!"
+    if [[ -z "$XTF_PROFIT" ]] ; then
+        XTF_PROFIT=20
+    fi
+    status "$1" "$2"
+    i=0
+    for SortedCurrAmount in "${SortedCurrAmountArr[@]}"
+    do
+        if awk -v n="$SortedCurrAmount" 'BEGIN { exit !(n > 0) }' ; then    #check if it's bigger than 0, would be nice to use -gt but it doesnt support floating-point numbers
+            SortedCurrAmountArr[$i]=$(awk "BEGIN { printf \"%.4f\", ${SortedCurrAmountArr[$i]} * ($XTF_PROFIT/100+1)}")
+        fi
+        i=$((i+1))
+    done
 }
 
+printstatus(){
+    i=0
+    for SortedCurrName in "${SortedCurrArr[@]}"
+    do 
+        echo "$SortedCurrName : ${SortedCurrAmountArr[$i]}"
+        i=$((i+1))
+    done
+}
 while getopts ":-:a:b:c:h" opt #a+arg, b+arg, c+arg, h (no arg), -+arg (used for --help)
 do 
     case "$opt" in 
@@ -171,15 +190,11 @@ case "$1" in
         ;;
     status)
         status "$2" "$3"
-        i=0
-        for SortedCurrName in "${SortedCurrArr[@]}"
-        do 
-            echo "$SortedCurrName : ${SortedCurrAmountArr[$i]}"
-            i=$((i+1))
-        done
+        printstatus
         ;;
     profit)
-        profit
+        profit "$2" "$3"
+        printstatus
         ;;
     *)  
         filter "$1" "$2"
