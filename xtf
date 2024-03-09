@@ -8,12 +8,10 @@ export LC_ALL=C
 DATE_TIME_REGEX="^([0-9]{4})-([0-9]{1,2})-([0-9]{1,2}) ([0-9]{1,2}):([0-9]{1,2}):([0-9]{1,2})$"     #will check if the date and time is in the correct format (YYYY-MM-DD HH:MM:SS)
 
 HELP="0" #dont like this :( but it doesn't work without it :((
-
 AFTER=""
 BEFORE=""
 CURRENCY=""
-USER=""
-FILE=""
+ListOUT=""
 
 help(){
     echo "xtf [-h|--help] [FILTR] [PŘÍKAZ] UŽIVATEL LOG [LOG2 [...]"
@@ -27,9 +25,12 @@ FILTR může být kombinace následujících:
 -b DATETIME – before: jsou uvažovány pouze záznamy PŘED tímto datem a časem (bez něj).
 -c CURRENCY – jsou uvažovány pouze záznamy odpovídající dané měně.
 -h a --help vypíšou nápovědu s krátkým popisem každého příkazu a přepínače."
+exit 0
 }
 
 list(){
+    USER=$1
+    FILE=$2     #get the user and file from arguments passed to the function
     AWKARG="\$1 == user"    #variable to store the eventual argument for awk
     if [[ -n $AFTER ]]; then
         AWKARG+=" && \$2 > after"
@@ -40,9 +41,33 @@ list(){
     if [[ -n $CURRENCY ]]; then
         AWKARG+=" && \$3 == currency"
     fi
-    awk -v user="$USER" -v after="$AFTER" -v before="$BEFORE" -v currency="$CURRENCY" -F ';' "$AWKARG" "$FILE"
+    ListOUT=$(awk -v user="$USER" -v after="$AFTER" -v before="$BEFORE" -v currency="$CURRENCY" -F ';' "$AWKARG" "$FILE")   #according to the interwebz there's no way to return a string, much less an array, and that this is just how it's done in shell, not sure if i like this
 }
 
+listCurrency(){
+    UnsortedMultiCurr=$(echo "$ListOUT" | awk -F';' '{print $3}')    #save all the currencies left after filtering
+    readarray -t UnsortedMultiCurrArr <<<"$UnsortedMultiCurr"    #split results from awk by new line into elements in an array
+    UnsortedCurrArr=() #Array without possible duplicates
+    i=0
+    for elementM in "${UnsortedMultiCurrArr[@]}"
+    do
+        found=0
+        for elementS in "${UnsortedCurrArr[@]}"
+        do
+            if [[ "$elementM" == "$elementS" ]] ; then      #possible duplicates were removed
+                found=1
+            fi
+        done
+        if [[ "$found" == "0" ]] ; then
+            UnsortedCurrArr[$i]="$elementM"
+            i+=1
+        fi
+    done
+    SortedArr=$(printf "%s\n" "${UnsortedCurrArr[@]}" | sort)   #results sorted by sort utility, it needs to be fed with values separated by new lines, hence the use of printf instead of echo
+    if [[ -n "${SortedArr[*]}" ]] ; then
+        echo "${SortedArr[@]}"              #dont print if no results were found, would result in an empty line
+    fi
+}
 
 while getopts ":-:a:b:c:h" opt #a+arg, b+arg, c+arg, h (no arg), -+arg (used for --help)
 do 
@@ -54,7 +79,6 @@ do
             case $OPTARG in 
                 help)       #only accepting --help
                     help
-                    exit 0
                     ;;
                 *)
                     echo "Invalid syntax" >&2
@@ -88,7 +112,6 @@ do
 done
 if [ "$HELP" -eq "1" ] ; then
     help
-    exit 0
 fi
 if [ -n "$AFTER" ] ; then
     shift 2
@@ -99,14 +122,15 @@ fi
 if [ -n "$CURRENCY" ] ;  then
     shift 2
 fi
-USER=$2
-FILE=$3
+
 case "$1" in 
     list)   
-        list
+        list "$2" "$3"
+        echo "$ListOUT"
         ;;
     list-currency)
-        list-currency
+        list "$2" "$3"
+        listCurrency
         ;;
     status)
         status
@@ -115,11 +139,8 @@ case "$1" in
         profit
         ;;
     *)  
-        echo "NO command, use list, dont shift"
-        USER=$1
-        FILE=$2
-        list
+        list "$1" "$2"
+        echo "$ListOUT"
         ;;
 esac
-
 exit 0
