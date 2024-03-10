@@ -7,14 +7,6 @@ export LC_ALL=C
 
 DATE_TIME_REGEX="^([0-9]{4})-([0-9]{1,2})-([0-9]{1,2}) ([0-9]{1,2}):([0-9]{1,2}):([0-9]{1,2})$"     #will check if the date and time is in the correct format (YYYY-MM-DD HH:MM:SS)
 
-AFTER=""
-BEFORE=""
-CURRENCY=""
-filterOUT=""
-SortedCurrArr=()
-SortedCurrAmountArr=()
-files=()
-
 help(){
     echo "Použití: xtf [-h|--help] [FILTR] [PŘÍKAZ] UŽIVATEL LOG [LOG2 [...]
 
@@ -45,7 +37,7 @@ loadFiles(){ #load files from arguments, 1st argument tells it where to start, 2
     for file in "${files[@]}"
     do
         if ! fileCheck "$file" ; then
-            echo "error in file">&2
+            echo "$file is invalid">&2
             exit 1
         fi
     done
@@ -172,7 +164,7 @@ status(){
 
 profit(){
     if [[ -z "$XTF_PROFIT" ]] ; then
-        XTF_PROFIT=20
+        XTF_PROFIT=20           #if it hasn't been set, XTF_PROFIT defaults to 20% boost
     fi
     status "$1"
     i=0
@@ -254,8 +246,7 @@ do
     eval evaled='$'$i
 done
 
-loadFiles 3 "${arguments[@]}"   
-
+loadFiles 3 "${arguments[@]}"
 case "$1" in 
     list)
         filter "$2" "${files[@]}"
