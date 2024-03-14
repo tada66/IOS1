@@ -30,7 +30,7 @@ loadFiles(){ #load files from arguments, 1st argument tells it where to start, 2
     args=("$@")
     while [ -n "${args[$i]}" ] 
     do
-        files[$i-$start]="${args[$i]}"
+        files[i-start]="${args[$i]}"
         i=$((i+1))
         eval evaled='$'$i
     done
@@ -82,10 +82,9 @@ getContent(){   #load the content from a file into a variable, is file is compre
 }
 
 combinedFiles(){    #Combines the content from multiple files into a single variable
-    content=""
     for file in "${files[@]}"
     do
-    echo "$(getContent "$file")"
+    getContent "$file"
     done
 }
 
@@ -104,15 +103,11 @@ filter(){
     if [[ -n $CURRENCY ]]; then
         AWKARG+=" && \$3 == currency"
     fi
-    filterOUT=$(echo "$(combinedFiles)" | awk -v user="$USER" -v after="$AFTER" -v before="$BEFORE" -v currency="$CURRENCY" -F ';' "$AWKARG")   #according to the interwebz there's no way to return a string, much less an array, and that this is just how it's done in shell, not sure if i like this
+    combinedFiles | awk -v user="$USER" -v after="$AFTER" -v before="$BEFORE" -v currency="$CURRENCY" -F ';' "$AWKARG"   #according to the interwebz there's no way to return a string, much less an array, and that this is just how it's done in shell, not sure if i like this
 }
 
 getCurrency(){
-    for file in "${files[@]}"
-    do
-    filter "$1" "$file"  #call filter to get filterOUT based on arguments
-    done
-    UnsortedMultiCurr=$(echo "$filterOUT" | awk -F';' '{print $3}')    #save all the currencies left after filtering
+    UnsortedMultiCurr=$( filter "$1" | awk -F';' '{print $3}')    #save all the currencies left after filtering
     readarray -t UnsortedMultiCurrArr <<<"$UnsortedMultiCurr"    #split results from awk by new line into elements in an array $UnsortedMultiCurrArr
     UnsortedCurrArr=() #Array without possible duplicates
     i=0
@@ -126,19 +121,18 @@ getCurrency(){
             fi
         done
         if [[ "$found" == "0" ]] ; then
-            UnsortedCurrArr[$i]="$elementM"
+            UnsortedCurrArr[i]="$elementM"
             i=$((i+1))
         fi
     done
-    SortedCurr=$(printf "%s\n" "${UnsortedCurrArr[@]}" | sort)   #results sorted by sort utility, it needs to be fed with values separated by new lines, hence the use of printf instead of echo
-    readarray -t SortedCurrArr <<<"$SortedCurr"
+    printf "%s\n" "${UnsortedCurrArr[@]}" | sort   #results sorted by sort utility, it needs to be fed with values separated by new lines, hence the use of printf instead of echo
 }
 
 status(){
-    getCurrency "$1" #call filter to get filterOUT based on arguments
-    CurrNames=$(echo "$filterOUT" | awk -F';' '{print $3}')    #save all the currency names left after filtering
+    readarray -t SortedCurrArr <<<"$(getCurrency "$1")"
+    CurrNames=$(filter "$1" | awk -F';' '{print $3}')    #save all the currency names left after filtering
     readarray -t CurrNameArr <<<"$CurrNames"    #split results from awk by new line into elements in an array CurrNameArr
-    CurrAmounts=$(echo "$filterOUT" | awk -F';' '{print $4}')
+    CurrAmounts=$(filter "$1" | awk -F';' '{print $4}')
     readarray -t CurrAmountArr <<<"$CurrAmounts"
     j=0
     if [[ -z "${CurrNameArr[*]}" ]] || [[ -z "${SortedCurrArr[*]}" ]] ; then
@@ -150,7 +144,7 @@ status(){
         for SortedCurrName in "${SortedCurrArr[@]}"
         do
             if [[ "$SortedCurrName" == "$CurrName" ]] ; then
-                SortedCurrAmountArr[$i]=$(awk "BEGIN { printf \"%.4f\", ${SortedCurrAmountArr[$i]} + ${CurrAmountArr[$j]}; }")     #this would be better with bc but i dont have that in my shell
+                SortedCurrAmountArr[i]=$(awk "BEGIN { printf \"%.4f\", ${SortedCurrAmountArr[$i]} + ${CurrAmountArr[$j]}; }")     #this would be better with bc but i dont have that in my shell
             else 
                 i=$((i+1))
             fi
@@ -168,7 +162,7 @@ profit(){
     for SortedCurrAmount in "${SortedCurrAmountArr[@]}"
     do
         if awk -v n="$SortedCurrAmount" 'BEGIN { exit !(n > 0) }' ; then    #check if it's bigger than 0, would be nice to use -gt but it doesnt support floating-point numbers
-            SortedCurrAmountArr[$i]=$(awk "BEGIN { printf \"%.4f\", ${SortedCurrAmountArr[$i]} * ($XTF_PROFIT/100+1)}") #if it's bigger multiply by (100+XTF_PROFIT)%
+            SortedCurrAmountArr[i]=$(awk "BEGIN { printf \"%.4f\", ${SortedCurrAmountArr[$i]} * ($XTF_PROFIT/100+1)}") #if it's bigger multiply by (100+XTF_PROFIT)%
         fi
         i=$((i+1))
     done
@@ -238,7 +232,7 @@ i=0
 eval evaled='$'$i
 while [ -n "$evaled" ] 
 do
-    arguments[$i]="$evaled"     #loads all the entered arguments into arguments[] array
+    arguments[i]="$evaled"     #loads all the entered arguments into arguments[] array
     i=$((i+1))
     eval evaled='$'$i
 done
@@ -247,15 +241,9 @@ loadFiles 3 "${arguments[@]}"
 case "$1" in 
     list)
         filter "$2" "${files[@]}"
-        if [[ -n "$filterOUT" ]] ; then
-            echo "$filterOUT"
-        fi
         ;;
     list-currency)
         getCurrency "$2" "${files[@]}"
-        if [[ -n "${SortedCurr[*]}" ]] ; then
-            echo "${SortedCurr[@]}"              #dont print if no results were found, would result in an empty line
-        fi
         ;;
     status)
         status "$2" "${files[@]}"
@@ -268,9 +256,6 @@ case "$1" in
     *)  
         loadFiles 2 "${arguments[@]}"   #if no command was entered everything is shifted by one so we need to start reading files sooner
         filter "$1"
-        if [[ -n "$filterOUT" ]] ; then
-            echo "$filterOUT"
-        fi
         ;;
 esac
 exit 0
