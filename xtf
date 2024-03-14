@@ -91,7 +91,6 @@ combinedFiles(){    #Combines the content from multiple files into a single vari
 
 filter(){
     USER=$1     #get the user from the argument passed to the function
-    fileContent=$(combinedFiles)
     if [[ -z "$USER" ]] ; then
         exit 0
     fi
@@ -105,7 +104,7 @@ filter(){
     if [[ -n $CURRENCY ]]; then
         AWKARG+=" && \$3 == currency"
     fi
-    filterOUT=$(echo "$fileContent" | awk -v user="$USER" -v after="$AFTER" -v before="$BEFORE" -v currency="$CURRENCY" -F ';' "$AWKARG")   #according to the interwebz there's no way to return a string, much less an array, and that this is just how it's done in shell, not sure if i like this
+    filterOUT=$(echo "$(combinedFiles)" | awk -v user="$USER" -v after="$AFTER" -v before="$BEFORE" -v currency="$CURRENCY" -F ';' "$AWKARG")   #according to the interwebz there's no way to return a string, much less an array, and that this is just how it's done in shell, not sure if i like this
 }
 
 getCurrency(){
