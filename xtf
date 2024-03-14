@@ -85,10 +85,8 @@ combinedFiles(){    #Combines the content from multiple files into a single vari
     content=""
     for file in "${files[@]}"
     do
-    content+="$(getContent "$file")\n"
+    echo "$(getContent "$file")"
     done
-    content=$(echo -n "$content" | sed '$s/\\n$//')  #remove the last new line so it doesnt cause problems, sed matches the last \n and replaces with nothing
-    echo -e "$content"      #print while interpretting the \n as a newline
 }
 
 filter(){
