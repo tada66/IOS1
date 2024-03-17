@@ -47,11 +47,10 @@ fileCheck(){ #check if file exists and that it's layout is valid
     if [[ ! -f "$1" ]] ; then
         return 1
     fi
-    fileContent=$(getContent "$1")
-    readarray -t TradersArr <<<"$(echo "$fileContent" | awk -F';' '{print $1}')"
-    readarray -t DateTimesArr <<<"$(echo "$fileContent" | awk -F';' '{print $2}')"
-    readarray -t CurrenciesArr <<<"$(echo "$fileContent" | awk -F';' '{print $3}')" #divide the 3 columns into arrays
-    readarray -t AmountsArr <<<"$(echo "$fileContent" | awk -F';' '{print $4}')"
+    readarray -t TradersArr <<<"$(getContent "$1" | awk -F';' '{print $1}')"
+    readarray -t DateTimesArr <<<"$(getContent "$1" | awk -F';' '{print $2}')"
+    readarray -t CurrenciesArr <<<"$(getContent "$1" | awk -F';' '{print $3}')" #divide the 4 columns into arrays
+    readarray -t AmountsArr <<<"$(getContent "$1" | awk -F';' '{print $4}')"
     i=0
     for trader in "${TradersArr[@]}"
     do
@@ -107,8 +106,7 @@ filter(){
 }
 
 getCurrency(){
-    UnsortedMultiCurr=$( filter "$1" | awk -F';' '{print $3}')    #save all the currencies left after filtering
-    readarray -t UnsortedMultiCurrArr <<<"$UnsortedMultiCurr"    #split results from awk by new line into elements in an array $UnsortedMultiCurrArr
+    readarray -t UnsortedMultiCurrArr <<<"$(filter "$1" | awk -F';' '{print $3}')"    #split results from awk by new line into elements in an array $UnsortedMultiCurrArr
     UnsortedCurrArr=() #Array without possible duplicates
     i=0
     for elementM in "${UnsortedMultiCurrArr[@]}"
@@ -130,10 +128,8 @@ getCurrency(){
 
 status(){
     readarray -t SortedCurrArr <<<"$(getCurrency "$1")"
-    CurrNames=$(filter "$1" | awk -F';' '{print $3}')    #save all the currency names left after filtering
-    readarray -t CurrNameArr <<<"$CurrNames"    #split results from awk by new line into elements in an array CurrNameArr
-    CurrAmounts=$(filter "$1" | awk -F';' '{print $4}')
-    readarray -t CurrAmountArr <<<"$CurrAmounts"
+    readarray -t CurrNameArr <<<"$(filter "$1" | awk -F';' '{print $3}')"    #split results from awk by new line into elements in an array CurrNameArr
+    readarray -t CurrAmountArr <<<"$(filter "$1" | awk -F';' '{print $4}')"
     j=0
     if [[ -z "${CurrNameArr[*]}" ]] || [[ -z "${SortedCurrArr[*]}" ]] ; then
         exit 0
@@ -144,7 +140,7 @@ status(){
         for SortedCurrName in "${SortedCurrArr[@]}"
         do
             if [[ "$SortedCurrName" == "$CurrName" ]] ; then
-                SortedCurrAmountArr[i]=$(awk "BEGIN { printf \"%.4f\", ${SortedCurrAmountArr[$i]} + ${CurrAmountArr[$j]}; }")     #this would be better with bc but i dont have that in my shell
+                SortedCurrAmountArr[i]=$(awk "BEGIN { printf \"%.4f\", ${SortedCurrAmountArr[$i]} + ${CurrAmountArr[$j]}; }")     #this could be done with bc but i cant get it to work
             else 
                 i=$((i+1))
             fi
