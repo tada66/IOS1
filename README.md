@@ -57,8 +57,9 @@ Vstupní log soubory
 Skript analyzuje záznamy (logy) pouze ze zadaných souborů v daném pořadí.
 
 Formát logu je CSV, kde oddělovačem je znak středníku ;. Formát je řádkový, každý řádek odpovídá záznamu transakce provedené na kryptoměnové burze ve tvaru
-
+```
 JMENO UZIVATELE;DATUM A CAS;MENA;HODNOTA
+```
 kde
 
 JMENO UZIVATELE označuje uživatelské jméno klienta. Pro jednoduchost uvažujte, že se jedná o řetězec obsahující pouze tisknutelné ASCII znaky bez bílých znaků nebo znaku středníku.
@@ -66,9 +67,10 @@ DATUM A CAS jsou ve formátu YYYY-MM-DD HH:MM:SS
 MENA je třípísmenný kód (krypto)měny, např USD, EUR, CZK, BTC, ETH atd.
 HODNOTA je hodnota transakce. Záporná hodnota značí prodej (resp. výběr) a kladná hodnota značí nákup (resp. vložení) měny. HODNOTA je desetinné číslo s přesností na čtyři desetinná místa s tečkou jako oddělovacím znakem.
 Příklad záznamů:
-
+```
 CryptoWiz;2024-01-14 23:43:13;EUR;-3000.0000
 CryptoWiz;2024-01-14 23:43:15;ETH;1.2313
+```
 První záznam značí prodej 3000 jednotek měny Euro (kód měny EUR) uživatelem CryptoWiz.
 Druhý záznam značí nákup 1.2313 jednotek měny Ethereum (kód měny ETH), opět uživatelem CryptoWiz.
 Můžete předpokládat, že záznamy jsou ve vstupních souborech uvedeny chronologicky a je-li na vstupu více souborů, jejich pořadí je také chronologické.
