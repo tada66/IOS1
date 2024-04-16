@@ -60,19 +60,19 @@ Formát logu je CSV, kde oddělovačem je znak středníku ;. Formát je řádko
 ```
 JMENO UZIVATELE;DATUM A CAS;MENA;HODNOTA
 ```
-kde
+kde\
+JMENO UZIVATELE označuje uživatelské jméno klienta. Pro jednoduchost uvažujte, že se jedná o řetězec obsahující pouze tisknutelné ASCII znaky bez bílých znaků nebo znaku středníku.\
+DATUM A CAS jsou ve formátu YYYY-MM-DD HH:MM:SS\
+MENA je třípísmenný kód (krypto)měny, např USD, EUR, CZK, BTC, ETH atd.\
+HODNOTA je hodnota transakce. Záporná hodnota značí prodej (resp. výběr) a kladná hodnota značí nákup (resp. vložení) měny. HODNOTA je desetinné číslo s přesností na čtyři desetinná místa s tečkou jako oddělovacím znakem.\
 
-JMENO UZIVATELE označuje uživatelské jméno klienta. Pro jednoduchost uvažujte, že se jedná o řetězec obsahující pouze tisknutelné ASCII znaky bez bílých znaků nebo znaku středníku.
-DATUM A CAS jsou ve formátu YYYY-MM-DD HH:MM:SS
-MENA je třípísmenný kód (krypto)měny, např USD, EUR, CZK, BTC, ETH atd.
-HODNOTA je hodnota transakce. Záporná hodnota značí prodej (resp. výběr) a kladná hodnota značí nákup (resp. vložení) měny. HODNOTA je desetinné číslo s přesností na čtyři desetinná místa s tečkou jako oddělovacím znakem.
 Příklad záznamů:
 ```
 CryptoWiz;2024-01-14 23:43:13;EUR;-3000.0000
 CryptoWiz;2024-01-14 23:43:15;ETH;1.2313
 ```
-První záznam značí prodej 3000 jednotek měny Euro (kód měny EUR) uživatelem CryptoWiz.
-Druhý záznam značí nákup 1.2313 jednotek měny Ethereum (kód měny ETH), opět uživatelem CryptoWiz.
+První záznam značí prodej 3000 jednotek měny Euro (kód měny EUR) uživatelem CryptoWiz.\
+Druhý záznam značí nákup 1.2313 jednotek měny Ethereum (kód měny ETH), opět uživatelem CryptoWiz.\
 Můžete předpokládat, že záznamy jsou ve vstupních souborech uvedeny chronologicky a je-li na vstupu více souborů, jejich pořadí je také chronologické.
 
 Nové kryptoměny vznikají téměř každý den a kontrola správnosti kódů měn by akorát brzdila Vaši schopnost rychlé inovace. Předpokládejte, že všechny vyskytující se kódy měn jsou validní a existující (není potřeba kontrolovat).
