@@ -1,5 +1,5 @@
-1. Úloha IOS (2024)
-Popis úlohy
+# 1. Úloha IOS (2024); Hodnoceno: 13/15b
+## Popis úlohy
 Jako správní technologičtí vizionáři se i Vaše firma rozhodla vytvořit svou vlastní kryptoměnovou burzu, nazvanou XTF (eXtortion, Travesty, Fraud). Burza svým klientům umožňuje vkládat finanční prostředky ve formě kryptoměn i fiat měn; provádět směnu svých prostředků za měny jiné; úschovu prostředků a půjčování prostředků (tzv. margin).
 
 Aby měli uživatelé přehled o svých účtech (a prostředcích na nich), musí Vaše burza vést záznamy o provedených transakcích všech uživatelů. Vaše účetnictví je však velmi nepřehledné a chaotické (tak, jak by to mělo být u každého správného startupu), a všechny záznamy jsou tak mezi sebou promíchané a uložené v jednom nebo více textových, příp. komprimovaných, souborech. Přes grafické rozhraní byste však měli každému uživateli zobrazovat pouze záznamy z jeho obchodního účtu. V rámci předzpracování dat pro výstup tak bude zapotřebí záznamy uživatelů filtrovat a třídit.
@@ -8,14 +8,14 @@ Pokud však chcete skutečně uspět na poli kryptoměnových fintech společnos
 
 Přestože jinak zásadně dbáte na využívání těch nejnovějších a nejmodernějších technologií (správné buzzwords Vám zajistí příliv dalšího kapitálu od investorů), v tomto konkrétním případě skutečně dává větší smysl vyřešit problém pomocí shell skriptu a nikoliv natrénované neuronové sítě.
 
-Specifikace rozhraní skriptu
-JMÉNO
+## Specifikace rozhraní skriptu
+### JMÉNO
 
 xtf - skript pro předzpracování logů z Vaší kryptoměnové burzy.
-POUŽITÍ
+### POUŽITÍ
 
 xtf [-h|--help] [FILTR] [PŘÍKAZ] UŽIVATEL LOG [LOG2 [...]
-VOLBY
+### VOLBY
 
 PŘÍKAZ může být jeden z:
 list – výpis záznamů pro daného uživatele.
@@ -27,7 +27,7 @@ FILTR může být kombinace následujících:
 -b DATETIME – before: jsou uvažovány pouze záznamy PŘED tímto datem a časem (bez něj).
 -c CURRENCY – jsou uvažovány pouze záznamy odpovídající dané měně.
 -h a --help vypíšou nápovědu s krátkým popisem každého příkazu a přepínače.
-POPIS
+### POPIS
 
 Skript filtruje, seskupuje a vypisuje záznamy z logů kryptoměnové burzy. Pokud je skriptu zadán příkaz, nad filtrovanými záznamy daný příkaz provede.
 
@@ -41,7 +41,7 @@ status spočítá a vypíše stav účtu pro každou měnu uživatele UŽIVATEL 
 
 profit je podobný příkazu status s tím rozdílem, že kladné zůstatky měn jsou uměle navýšeny o X %, kde X je hodnota proměnné prostředí XTF_PROFIT. Jste však trochu zapomnětliví a občas tak zapomenete proměnnou nastavit. Pokud není proměnná prostředí XTF_PROFIT nastavena, uvažujte výchozí hodnotu 20 % (příliš vysoké zhodnocení by mohlo přitáhnout nechtěnou pozornost regulačních úřadů). Hodnota proměnné XTF_PROFIT bude vždy pouze nezáporné celé číslo.
 
-DETAILY
+### DETAILY
 
 Pokud skript nedostane na vstupu žádný příkaz, uvažujte výchozí příkaz list.
 
@@ -79,9 +79,9 @@ Nemusíte kontrolovat korektnost operací vzhledem ke kontextu ostatních operac
 
 Nemusíte kontrolovat korektnost operací vzhledem ke stavu účtu uživatele, např. zda má uživatel na účtu dostatek prostředků na nákup nebo prodej měny (můžete uvažovat, že uživatel má pro tyto operace k dispozici dostatečný margin).
 
-Návratová hodnota
+## Návratová hodnota
 Skript vrací úspěch v případě úspěšné operace. Interní chyba skriptu nebo chybné argumenty budou doprovázeny chybovým hlášením na standardní chybový výstup a neúspěšným návratovým kódem.
-Implementační detaily
+## Implementační detaily
 Skript žádný soubor nemodifikuje. Skript nesmí používat dočasné soubory. Povoleny jsou však dočasné soubory nepřímo tvořené jinými příkazy (např. příkazem sed -i).
 
 Skript by měl mít v celém běhu nastaveno POSIXLY_CORRECT=yes.
@@ -94,26 +94,26 @@ Skript musí běžet na běžně dostupných OS GNU/Linux, BSD a MacOS. Virtuál
 
 Čísla vypisujte v desítkovém zápisu [ÚPRAVA 18.2.] oříznutá (tedy nemusíte zaokrouhlovat) na čtyři desetinná místa. Pozor, některé nástroje (např. awk) mohou větší čísla vypisovat implicitně pomocí vědeckého zápisu.
 
-Odevzdání projektu
+## Odevzdání projektu
 Odevzdávejte pouze skript xtf (nebalte ho do žádného archivu). Odevzdejte do IS, termín Projekt 1.
 
-Rady
+## Rady
 Dobrá dekompozice problému na podproblémy Vám může značně ulehčit práci a předejít chybám.
 Naučte se dobře používat funkce v shellu.
 Nedoporučujeme řešit projekt výhradně pomocí generativní AI. Generování velkých úseků kódu (nebo rovnou celého projektu) může vést k podezření z plagiátorství v případě vysoké shody vygenerovaného kódu napříč studenty.
 Studenti podezřelí z plagiátorství mohou být pozváni na podání vysvětlení a demonstraci, že svému kódu skutečně rozumí. V případě neúspěšné obhajoby hrozí, že na Vaše řešení bude pohlíženo jako na plagiát se všemi důsledky (tj. disciplinární řízení atp.)!
 Použití AI jako asistenta (rádce, inteligentní debugger, návrh dekompozice, brainstorming) k vyřešení projektu je v pořádku. Ve vlastním zájmu se však raději vyvarujte přebírání velkých úseků kódu.
-Možná rozšíření
+## Možná rozšíření
 Implementací volitelných rozšíření můžete kompenzovat případnou ztrátu bodů v jiné časti projektu (lze implementovat libovolný počet rozšíření). Rozšíření jsou nepovinná a plný počet bodů je možné získat i bez jejich implementace.
 
 Podpora specifikace parametrů a přepínačů [FILTR], [PŘÍKAZ] a UŽIVATEL v libovolném pořadí. Log soubor nebo soubory budou vždy zadány jako poslední.
 
 Filtr -c je možné specifikovat vícenásobně. Příkazy list, list-currency, status a profit budou následně uvažovat ty záznamy, které obsahují některou z uvedených měn.
 
-Příklady použití
+## Příklady použití
 Ukázky vstupních log souborů jsou dostupné zde: https://pajda.fit.vutbr.cz/ios/ios-24-1-logs.
 Příklady:
-
+```
 $ cat cryptoexchange.log
 Trader1;2024-01-15 15:30:42;EUR;-2000.0000
 Trader2;2024-01-15 15:31:12;BTC;-9.8734
@@ -121,47 +121,68 @@ Trader1;2024-01-16 18:06:32;USD;-3000.0000
 CryptoWiz;2024-01-17 08:58:09;CZK;10000.0000
 Trader1;2024-01-20 11:43:02;ETH;1.9417
 Trader1;2024-01-22 09:17:40;ETH;10.9537
+```
+```
 $ ./xtf Trader1 cryptoexchange.log
 Trader1;2024-01-15 15:30:42;EUR;-2000.0000
 Trader1;2024-01-16 18:06:32;USD;-3000.0000
 Trader1;2024-01-20 11:43:02;ETH;1.9417
 Trader1;2024-01-22 09:17:40;ETH;10.9537
+```
+```
 $ ./xtf list Trader1 cryptoexchange.log
 Trader1;2024-01-15 15:30:42;EUR;-2000.0000
 Trader1;2024-01-16 18:06:32;USD;-3000.0000
 Trader1;2024-01-20 11:43:02;ETH;1.9417
 Trader1;2024-01-22 09:17:40;ETH;10.9537
+```
+```
 $ ./xtf -c ETH Trader1 cryptoexchange.log
 Trader1;2024-01-20 11:43:02;ETH;1.9417
 Trader1;2024-01-22 09:17:40;ETH;10.9537
+```
+```
 $ ./xtf -c GBP Trader1 cryptoexchange.log
 $
+```
+```
 $ ./xtf list-currency Trader1 cryptoexchange.log
 ETH
 EUR
 USD
+```
+```
 $ ./xtf status Trader1 cryptoexchange.log
 ETH : 12.8954
 EUR : -2000.0000
 USD : -3000.0000
+```
+```
 $ ./xtf -b "2024-01-22 09:17:40" status Trader1 cryptoexchange.log
 ETH : 1.9417
 EUR : -2000.0000
 USD : -3000.0000
+```
+```
 $ ./xtf -a "2024-01-15 16:00:00" -b "2024-01-22 09:17:41" status Trader1 cryptoexchange.log
 ETH : 12.8954
 USD : -3000.0000
+```
+```
 $ ./xtf profit Trader1 cryptoexchange.log
 ETH : 15.4744
 EUR : -2000.0000
 USD : -3000.0000
+```
+```
 export XTF_PROFIT=40
 $ ./xtf profit Trader1 cryptoexchange.log
 ETH : 18.0535
 EUR : -2000.0000
 USD : -3000.0000
-Příklad s více logy:
-
+```
+### Příklad s více logy:
+```
 $ cat cryptoexchange-1.log
 Trader1;2024-01-15 15:30:42;EUR;-2000.0000
 Trader2;2024-01-15 15:31:12;BTC;-9.8734
@@ -176,25 +197,21 @@ $ ./xtf status Trader1 cryptoexchange-1.log cryptoexchange-2.log.gz
 ETH : 12.8954
 EUR : -2000.0000
 USD : -3000.0000
-Příklady rozšíření:
-
+```
+### Příklady rozšíření:
+```
 $ ./xtf Trader1 status -a "2024-01-15 16:00:00" -b "2024-01-22 09:17:41" cryptoexchange.log
 ETH : 12.8954
 USD : -3000.0000
+```
+```
 $ ./xtf -c ETH -c USD Trader1 cryptoexchange.log
 Trader1;2024-01-16 18:06:32;USD;-3000.0000
 Trader1;2024-01-20 11:43:02;ETH;1.9417
 Trader1;2024-01-22 09:17:40;ETH;10.9537
+```
+```
 $ ./xtf -c ETH -c EUR -c GBP list-currency Trader1 cryptoexchange.log
 ETH
 EUR
-Popis úlohy
-Specifikace rozhraní skriptu
-Vstupní log soubory
-Návratová hodnota
-Implementační detaily
-Odevzdání projektu
-Rady
-Možná rozšíření
-Příklady použití
-Built with Pandoc using pandoc-bootstrap theme
+```
